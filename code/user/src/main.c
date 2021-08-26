@@ -55,29 +55,16 @@ void SystemClock_Config(void)
   }
 }
 
-void HESClockInit(void)
-{
-	 GPIO_InitTypeDef  gpio_init_structure = {0};
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-
-    gpio_init_structure.Pin   = GPIO_PIN_0;
-    gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
-    gpio_init_structure.Pull  = GPIO_NOPULL;
-    gpio_init_structure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    HAL_GPIO_Init(GPIOB, &gpio_init_structure);
-	 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
-	 
-}
-
 int main(void)
 {
     HAL_Init();
 
     SystemClock_Config();
-	//HESClockInit();
     Key_Init();
     UTIL_TIMER_Init();
     LED_Init();
+
+    ButtonServer_Init();
     SubghzApp_Init();
 
     while (1) {

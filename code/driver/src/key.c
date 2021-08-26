@@ -25,13 +25,4 @@ uint8_t Key_GetInput1(void)
     return HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1);
 }
 
-//uint8_t Key_GetInput2(void)
-//{
-
-//}
-
-//uint8_t Key_GetInput3(void)
-//{
-//    
-//}
 

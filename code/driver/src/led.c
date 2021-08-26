@@ -1,26 +1,31 @@
 #include "led.h"
+#include "stm32_timer.h"
 #include "stm32wlxx.h"
-#include "timer.h"
 
-static TimerEvent_t RedTimer;
-static TimerEvent_t BlueTimer;
-static TimerEvent_t GreenTimer;
 
-static void LED_RedClose(void* parm)
+
+struct LED_GPIO_CONF {
+	uint16_t pin;
+	GPIO_TypeDef * port;
+	UTIL_TIMER_Object_t timer;
+} led_config[LED_TYPE_NUM] = 
 {
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
+ 0	
+};
+
+/**
+ * @brief 关闭LED
+ * 
+ * @param type LED类型
+ */
+void LED_Close(enum led_type type)
+{
+	HAL_GPIO_WritePin(led_config[type].port, led_config[type].pin, GPIO_PIN_RESET);
 }
 
-static void LED_GreenClose(void* parm)
-{
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_RESET);
-}
-
-static void LED_BlueClose(void* parm)
-{
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
-}
-
+/**
+ * @brief LED初始化
+ */
 void LED_Init(void)
 {
     GPIO_InitTypeDef  gpio_init_structure = {0};
@@ -29,39 +34,30 @@ void LED_Init(void)
 	__HAL_RCC_GPIOC_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
 
-	gpio_init_structure.Pin   = GPIO_PIN_4 | GPIO_PIN_3;
 	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
 	gpio_init_structure.Pull  = GPIO_NOPULL;
 	gpio_init_structure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-	HAL_GPIO_Init(GPIOB, &gpio_init_structure);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
-	
-	TimerInit(&RedTimer, LED_RedClose);
-	TimerInit(&BlueTimer, LED_BlueClose);
-	TimerInit(&GreenTimer, LED_GreenClose);
 
-    TimerSetValue(&RedTimer, 500);
-    TimerSetValue(&BlueTimer, 500);
-    TimerSetValue(&GreenTimer, 500);
+	for (uint8_t i = 0; i < LED_TYPE_NUM; i++) {
+		gpio_init_structure.Pin = led_config[i].pin;
+		HAL_GPIO_Init(led_config[i].port, &gpio_init_structure);
+		UTIL_TIMER_Create(&led_config[i].timer, 0, UTIL_TIMER_ONESHOT, (void (*)(void *))LED_Close, i);
+	}
+
 }
 
+/**
+ * @brief 打开LED直到ms结束
+ * 
+ * @param led led类型
+ * @param ms 打开时间，0常开
+ */
+void LED_OpenUntil(enum led_type led, uint32_t ms)
+{
+	HAL_GPIO_WritePin(led_config[led].port, led_config[led].pin, GPIO_PIN_SET);
+
+	if (ms != 0) {
+		UTIL_TIMER_StartWithPeriod(&led_config[i].timer, ms);
+	}
+}
  
-
-void LED_RedToggle(void)
-{
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);
-    TimerStart(&RedTimer);
-}
-
-void LED_BlueToggle(void)
-{
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_SET);
-    TimerStart(&BlueTimer);
-}
-
-void LED_GreenToggle(void)
-{
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_SET);
-    TimerStart(&GreenTimer);
-}

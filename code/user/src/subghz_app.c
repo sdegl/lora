@@ -4,7 +4,6 @@
 #include "main.h"
 #include "radio.h"
 #include "radio_driver.h"
-#include "stm32_lpm_if.h"
 #include "timer.h"
 /*!
  * @brief Function to be executed on Radio Tx Done event
@@ -86,9 +85,7 @@ void SubghzApp_Init(void)
         LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD,
         0, LORA_CRC_ON, FREQ_HOP_ON, 0, LORA_IQ_INVERSION_ON, true);
 	
-	time_on_air = Radio.TimeOnAir(MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR, LORA_CODINGRATE, LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD, 5, true);
-
-    Radio.SetMaxPayloadLength(MODEM_LORA, 64);
+    Radio.SetMaxPayloadLength(MODEM_LORA, 128);
 	
     Radio.SetChannel(RF_FREQUENCY);
 	Radio.Rx(0);
@@ -111,7 +108,16 @@ static void OnTxDone(void)
 
 static void OnRxDone(uint8_t* payload, uint16_t size, int16_t rssi, int8_t snr)
 {
+    payload[size] = 0;
 
+    if (strcmp(payload, "open") == 0) {
+        LED_OpenUntil(LED_GET, 0);
+    } 
+    else if (strcmp(payload, "close") == 0){
+        LED_Close(LED_GET);
+    }
+
+    Radio.Send((uint8_t*)"ack", sizeof("ack"));
 }
 
 static void OnTxTimeout(void)
