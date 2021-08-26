@@ -1,0 +1,39 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"stm32wlxx.h": "c",
+			"stm32wlxx_hal.h": "c",
+			"stm32wlxx_ll_system.h": "c",
+			"stm32wlxx_hal_conf.h": "c",
+			"stm32wlxx_hal_rtc.h": "c",
+			"stm32wlxx_hal_tim.h": "c",
+			"subghz.h": "c",
+			"main.h": "c",
+			"stm32wl55xx.h": "c",
+			"system_stm32wlxx.h": "c",
+			"core_cm4.h": "c",
+			"radio_conf.h": "c",
+			"mw_log_conf.h": "c",
+			"stm32_mem.h": "c",
+			"stm32_lpm.h": "c",
+			"led.h": "c",
+			"radio_driver.h": "c",
+			"stm32wlxx_hal_pwr.h": "c",
+			"stm32_lpm_if.h": "c",
+			"timer_if.h": "c",
+			"key.h": "c",
+			"stm32_timer.h": "c",
+			"utilities_conf.h": "c",
+			"protocol.h": "c",
+			"node.h": "c",
+			"gateway.h": "c",
+			"radio.h": "c",
+			"easylora.h": "c"
+		}
+	}
+}

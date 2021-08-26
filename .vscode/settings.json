@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "stm32wlxx.h": "c",
+        "stm32wlxx_hal.h": "c",
+        "stm32wlxx_ll_system.h": "c",
+        "stm32wlxx_hal_conf.h": "c",
+        "stm32wlxx_hal_rtc.h": "c",
+        "stm32wlxx_hal_tim.h": "c"
+    }
+}
