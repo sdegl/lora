@@ -9,6 +9,7 @@
 #include "SoftTimer.h"
 #include "key.h"
 #include "led.h"
+#include "relay.h"
 #include "stm32_timer.h"
 #include "stm32wlxx.h"
 #include "subghz_app.h"
@@ -63,6 +64,7 @@ int main(void)
     Key_Init();
     UTIL_TIMER_Init();
     LED_Init();
+    Relay_Init();
 
     ButtonServer_Init();
     SubghzApp_Init();

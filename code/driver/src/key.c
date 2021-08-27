@@ -10,8 +10,8 @@
 #define MESSAGE_INPUT_PORT GPIOA
 #define MESSAGE_INPUT_PIN GPIO_PIN_4
 
-// #define POWER_INPUT_PORT 
-// #define POWER_INPUT_PIN 
+#define POWER_INPUT_PORT GPIOA
+#define POWER_INPUT_PIN GPIO_PIN_4
 
 void Key_Init(void)
 {
@@ -25,17 +25,17 @@ void Key_Init(void)
     gpio_init_structure.Pin   = MESSAGE_INPUT_PIN;
     HAL_GPIO_Init(MESSAGE_INPUT_PORT, &gpio_init_structure);
 
-    // gpio_init_structure.Pin   = GPIO_PIN_4;
-    // HAL_GPIO_Init(GPIOA, &gpio_init_structure);
+    gpio_init_structure.Pin   = POWER_INPUT_PIN;
+    HAL_GPIO_Init(POWER_INPUT_PORT, &gpio_init_structure);
 }
 
-uint8_t Key_GetInput1(void)
+uint8_t Key_GetInput(void)
 {
     return HAL_GPIO_ReadPin(MESSAGE_INPUT_PORT, MESSAGE_INPUT_PIN);
 }
 
-// uint8_t Key_GetPower(void)
-// {
-//     return HAL_GPIO_ReadPin(MESSAGE_INPUT_PORT, MESSAGE_INPUT_PIN);
-// }
+uint8_t Key_GetPower(void)
+{
+    return HAL_GPIO_ReadPin(POWER_INPUT_PORT, POWER_INPUT_PIN);
+}
 

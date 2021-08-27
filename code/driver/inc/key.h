@@ -7,6 +7,7 @@
 #define __KEY_H__
 
 void Key_Init(void);
-unsigned char Key_GetInput1(void);
+unsigned char Key_GetInput(void);
+uint8_t Key_GetPower(void);
 #endif
 
