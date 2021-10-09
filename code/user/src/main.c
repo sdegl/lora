@@ -7,6 +7,7 @@
  */
 #include "main.h"
 #include "SoftTimer.h"
+#include "button_server.h"
 #include "key.h"
 #include "led.h"
 #include "relay.h"
@@ -56,6 +57,24 @@ void SystemClock_Config(void)
     }
 }
 
+
+
+static void test(void *parm)
+{
+static uint8_t t;
+	t = !t;
+
+	if (t == 1) {
+		Relay_Open(RELAY_LORA_MISS);
+		Relay_Open(RELAY_LOST_POWER);
+		Relay_Open(RELAY_GET);
+	} else {
+		Relay_Close(RELAY_LORA_MISS);
+		Relay_Close(RELAY_LOST_POWER);
+		Relay_Close(RELAY_GET);
+	}
+}
+
 int main(void)
 {
     HAL_Init();
@@ -72,7 +91,7 @@ int main(void)
     LED_OpenUntil(LED_POWER_ON, 0);
 
     while (1) {
-        SubghzApp_Process();
+		SubghzApp_Process();
     }
 }
 

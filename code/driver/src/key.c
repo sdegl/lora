@@ -11,7 +11,7 @@
 #define MESSAGE_INPUT_PIN GPIO_PIN_4
 
 #define POWER_INPUT_PORT GPIOA
-#define POWER_INPUT_PIN GPIO_PIN_4
+#define POWER_INPUT_PIN GPIO_PIN_12
 
 void Key_Init(void)
 {
@@ -19,7 +19,7 @@ void Key_Init(void)
     __HAL_RCC_GPIOA_CLK_ENABLE();
 
     gpio_init_structure.Mode  = GPIO_MODE_INPUT;
-    gpio_init_structure.Pull  = GPIO_NOPULL;
+    gpio_init_structure.Pull  = GPIO_PULLUP;
     gpio_init_structure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 
     gpio_init_structure.Pin   = MESSAGE_INPUT_PIN;

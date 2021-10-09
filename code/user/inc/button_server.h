@@ -12,4 +12,5 @@ enum state{
  * 
  */
 void ButtonServer_Init(void);
+enum state GetButtonStatus(void);
 #endif

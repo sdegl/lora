@@ -38,7 +38,7 @@ void ButtonServer_Handler(void *parm)
  */
 void ButtonServer_Init(void)
 {
-    UTIL_TIMER_Create(&timer, 20, UTIL_TIMER_ONESHOT, ButtonServer_Handler, NULL);
+    UTIL_TIMER_Create(&timer, 20, UTIL_TIMER_PERIODIC, ButtonServer_Handler, NULL);
     UTIL_TIMER_Start(&timer);
 }
 

@@ -9,9 +9,9 @@
 #include "timer.h"
 
 #define LORA_BANDWIDTH 0 /* [0: 125 kHz, 1: 250 kHz, 2: 500 kHz, 3: Reserved] */
-#define LORA_SPREADING_FACTOR 12 /* [SF7..SF12] */
+#define LORA_SPREADING_FACTOR 11 /* [SF7..SF12] */
 #define LORA_CODINGRATE 1 /* [1: 4/5, 2: 4/6, 3: 4/7, 4: 4/8] */
-#define LORA_PREAMBLE_LENGTH 15 /* Same for Tx and Rx */
+#define LORA_PREAMBLE_LENGTH 5 /* Same for Tx and Rx */
 #define LORA_SYMBOL_TIMEOUT 5 /* Symbols */
 #define LORA_FIX_LENGTH_PAYLOAD false
 #define LORA_IQ_INVERSION_ON false
@@ -71,33 +71,51 @@ static uint8_t lora_lost_state;
 
 static uint8_t get_state;
 
-#define HEART_BEAT_TIME 10000
+#define HEART_BEAT_TIME 20000
 static UTIL_TIMER_Object_t hear_beat_timer;
 static uint8_t buf[128] = "close";
 static uint8_t buf_len = sizeof("close");
 
-static UTIL_TIMER_Object_t send_delay_timer;
+static UTIL_TIMER_Object_t send_ack_timer;
+static uint8_t is_send;
+static uint8_t need_send;
+
+static uint8_t resend;
 
 void LoraLost(void * parm)
 {
     lora_lost_state = true;
     get_state = false;
+    UTIL_TIMER_StartWithPeriod(&hear_beat_timer, HEART_BEAT_TIME);
 }
 
 void LoraSend(void * parm)
 {
-    Radio.Send(buf, buf_len);
+    if (is_send == false) {
+        is_send = true;
+        Radio.Send(buf, buf_len);
+        if (lora_lost_state == false && resend < 10) {
+            resend++;
+            UTIL_TIMER_StartWithPeriod(&hear_beat_timer, 3000);
+        } else {
+            UTIL_TIMER_StartWithPeriod(&hear_beat_timer, HEART_BEAT_TIME);
+        }
+    }
 }
 
-void LoraSendDelay(void)
+void send_ack(void * parm)
 {
-    uint32_t time = 100 + Radio.Random() % 200;
-
-    UTIL_TIMER_StartWithPeriod(&send_delay_timer, time);
+    if (is_send == false) {
+        is_send = true;
+        Radio.Send("ack", strlen("ack"));
+    }
 }
+
 
 void SubghzApp_Init(void)
 {
+    uint32_t time;
+
     init.RxDone = OnRxDone;
     init.RxError = OnRxError;
     init.RxTimeout = OnRxTimeout;
@@ -117,19 +135,23 @@ void SubghzApp_Init(void)
         LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD,
         0, LORA_CRC_ON, FREQ_HOP_ON, 0, LORA_IQ_INVERSION_ON, true);
 	
+    time = Radio.TimeOnAir(MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR, LORA_CODINGRATE, 
+                           LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD, sizeof("close"), LORA_CRC_ON);
+
     Radio.SetMaxPayloadLength(MODEM_LORA, 128);
 	
     Radio.SetChannel(RF_FREQUENCY);
 	Radio.Rx(0);
 
-    UTIL_TIMER_Create(&send_delay_timer, 0, UTIL_TIMER_ONESHOT, LoraSend, NULL);
+    UTIL_TIMER_Create(&send_ack_timer, 0, UTIL_TIMER_ONESHOT, send_ack, NULL);
 
     UTIL_TIMER_Create(&lora_lost_timer, LOST_LORA_TIME, UTIL_TIMER_PERIODIC, LoraLost, NULL);
     UTIL_TIMER_Start(&lora_lost_timer);
 
-    UTIL_TIMER_Create(&hear_beat_timer, HEART_BEAT_TIME, UTIL_TIMER_PERIODIC, LoraSendDelay, NULL);
+    UTIL_TIMER_Create(&hear_beat_timer, HEART_BEAT_TIME, UTIL_TIMER_PERIODIC, (void (*)(void*))LoraSend, NULL);
     UTIL_TIMER_Start(&hear_beat_timer);
-    LoraSendDelay();
+
+    LoraSend(NULL);
 }
 
 void SubghzApp_Process(void)
@@ -174,9 +196,7 @@ void SubghzApp_Process(void)
 
             memcpy(buf, "close", sizeof("close"));
             buf_len = sizeof("close");
-            UTIL_TIMER_Stop(&hear_beat_timer);
-            UTIL_TIMER_Start(&hear_beat_timer);
-            LoraSendDelay();
+            need_send = true;
         }
         break;
 
@@ -186,14 +206,17 @@ void SubghzApp_Process(void)
 
             memcpy(buf, "open", sizeof("open"));
             buf_len = sizeof("open");
-            UTIL_TIMER_Stop(&hear_beat_timer);
-            UTIL_TIMER_Start(&hear_beat_timer);
-            LoraSendDelay();
+            need_send = true;
         }
         break;
 
     case button_shake:
         break;
+    }
+
+    if (need_send == true && is_send == false) {
+        need_send = false;
+        LoraSend(NULL);
     }
 }
 
@@ -205,36 +228,41 @@ static void OnCadDone(bool channelActivityDetected)
 static void OnTxDone(void)
 {
     Radio.Rx(0);
+	is_send = false;
 }
 
 static void OnRxDone(uint8_t* payload, uint16_t size, int16_t rssi, int8_t snr)
 {
     payload[size] = 0;
 
-    if (strcmp(payload, "open") == 0) {
+    if (strcmp((char*)payload, "open") == 0) {
         get_state = true;
-    } else if (strcmp(payload, "close") == 0) {
+        UTIL_TIMER_StartWithPeriod(&send_ack_timer, 5); /* Ó¦´ð */
+    } else if (strcmp((char*)payload, "close") == 0) {
         get_state = false;
+        UTIL_TIMER_StartWithPeriod(&send_ack_timer, 5); /* Ó¦´ð */
+    } else if(strcmp((char*)payload, "ack") == 0) {
+        
     } else {
         return;
     }
-
+    resend = 0;
+    UTIL_TIMER_StartWithPeriod(&hear_beat_timer, HEART_BEAT_TIME);
     UTIL_TIMER_StartWithPeriod(&lora_lost_timer, LOST_LORA_TIME);
     lora_lost_state = false;
-    // Radio.Send((uint8_t*)"ack", sizeof("ack"));
 }
 
 static void OnTxTimeout(void)
 {
-
+	Radio.Rx(0);
 }
 
 static void OnRxTimeout(void)
 {
-
+	Radio.Rx(0);
 }
 
 static void OnRxError(void)
 {
-
+	Radio.Rx(0);
 }

@@ -37,7 +37,7 @@ void LED_Init(void)
 	__HAL_RCC_GPIOA_CLK_ENABLE();
 
 	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
-	gpio_init_structure.Pull  = GPIO_NOPULL;
+	gpio_init_structure.Pull  = GPIO_PULLUP;
 	gpio_init_structure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 
 	for (uint8_t i = 0; i < LED_TYPE_NUM; i++) {
@@ -53,7 +53,7 @@ void LED_Init(void)
  * @param led led类型
  * @param ms 打开时间，0常开
  */
-void LED_OpenUntil(enum led_type led, uint32_t ms)
+void LED_OpenUntil(enum led_type led, unsigned int ms)
 {
 	HAL_GPIO_WritePin(led_config[led].port, led_config[led].pin, GPIO_PIN_SET);
 

@@ -414,9 +414,9 @@
               <FilePath>..\code\user\src\stm32_lpm_if.c</FilePath>
             </File>
             <File>
-              <FileName>test.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\code\user\inc\test.h</FilePath>
+              <FileName>button_server.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\user\src\button_server.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -812,6 +812,11 @@
               <FileName>key.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\code\driver\src\key.c</FilePath>
+            </File>
+            <File>
+              <FileName>relay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\driver\src\relay.c</FilePath>
             </File>
           </Files>
         </Group>

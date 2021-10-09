@@ -8,6 +8,6 @@
 
 void Key_Init(void);
 unsigned char Key_GetInput(void);
-uint8_t Key_GetPower(void);
+unsigned char Key_GetPower(void);
 #endif
 

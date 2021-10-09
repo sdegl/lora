@@ -8,8 +8,8 @@
  
 enum led_type{
     LED_POWER_ON,
-    LED_LORA_MISS,
     LED_LOST_POWER,
+    LED_LORA_MISS,
     LED_GET,
 
     LED_TYPE_NUM,
@@ -23,7 +23,7 @@ void LED_Init(void);
  * @param led led类型
  * @param ms 打开时间，0常开
  */
-void LED_OpenUntil(enum led_type led, uint32_t ms);
+void LED_OpenUntil(enum led_type led, unsigned int ms);
 
 /**
  * @brief 关闭LED
