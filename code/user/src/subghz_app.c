@@ -15,7 +15,7 @@
 #define LORA_SYMBOL_TIMEOUT 5 /* Symbols */
 #define LORA_FIX_LENGTH_PAYLOAD false
 #define LORA_IQ_INVERSION_ON false
-#define TX_OUTPUT_POWER 22 /* dBm */
+#define TX_OUTPUT_POWER 18 /* dBm */
 #define RX_TIMEOUT_VALUE 5000
 #define TCXO_WORKAROUND_TIME_MARGIN 50 /* 50ms margin */
 #define TX_TIMEOUT_VALUE 3000
@@ -80,13 +80,13 @@ static RadioEvents_t init;
 #define close "ccc"
 #define salve_ack "ack"
 
-#define LOST_LORA_TIME 20000
+#define LOST_LORA_TIME 2000
 static UTIL_TIMER_Object_t lora_lost_timer;
-static uint8_t lora_lost_state;
+static uint8_t lora_lost_state = 10;
 
 static uint8_t get_state;
 
-#define HEART_BEAT_TIME 3000
+#define HEART_BEAT_TIME 4000
 static UTIL_TIMER_Object_t hear_beat_timer;
 static uint8_t buf[128] = TX_ID close;
 static uint8_t buf_len = sizeof(TX_ID close);
@@ -99,9 +99,11 @@ static uint8_t resend;
 
 void LoraLost(void * parm)
 {
-    lora_lost_state = true;
-    get_state = false;
-    // UTIL_TIMER_StartWithPeriod(&hear_beat_timer, HEART_BEAT_TIME);
+    if (lora_lost_state > 0) {
+        lora_lost_state--;
+    }
+    // lora_lost_state = true;
+    
 }
 
 void LoraSend(void * parm)
@@ -109,13 +111,6 @@ void LoraSend(void * parm)
     if (is_send == false) {
         is_send = true;
         Radio.Send(buf, buf_len);
-
-        // if (lora_lost_state == false && resend < 10) {
-        //     resend++;
-        //     UTIL_TIMER_StartWithPeriod(&hear_beat_timer, 3000);
-        // } else {
-        //     UTIL_TIMER_StartWithPeriod(&hear_beat_timer, HEART_BEAT_TIME);
-        // }
     }
 }
 
@@ -135,8 +130,6 @@ void send_ack(void * parm)
 
 void SubghzApp_Init(void)
 {
-    uint32_t time;
-
     init.RxDone = OnRxDone;
     init.RxError = OnRxError;
     init.RxTimeout = OnRxTimeout;
@@ -155,9 +148,7 @@ void SubghzApp_Init(void)
         LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
         LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD,
         0, LORA_CRC_ON, FREQ_HOP_ON, 0, LORA_IQ_INVERSION_ON, true);
-	
-    time = Radio.TimeOnAir(MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR, LORA_CODINGRATE, 
-                           LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD, sizeof(close), LORA_CRC_ON);
+
 
     Radio.SetMaxPayloadLength(MODEM_LORA, 128);
 	
@@ -171,8 +162,8 @@ void SubghzApp_Init(void)
 #ifdef TX
     UTIL_TIMER_Create(&hear_beat_timer, HEART_BEAT_TIME, UTIL_TIMER_PERIODIC, (void (*)(void*))LoraSend, NULL);
     UTIL_TIMER_Start(&hear_beat_timer);
-#endif
     LoraSend(NULL);
+#endif
 }
 
 void SubghzApp_Process(void)
@@ -192,9 +183,10 @@ void SubghzApp_Process(void)
         Relay_Open(RELAY_LOST_POWER);
         
         /* LORAÐÅºÅ¶ªÊ§ */
-        if (lora_lost_state == true) {
+        if (lora_lost_state == 0) {
             LED_OpenUntil(LED_LORA_MISS, 0);
             Relay_Close(RELAY_LORA_MISS);
+            get_state = false;
         } else {
             LED_Close(LED_LORA_MISS);
             Relay_Open(RELAY_LORA_MISS);
@@ -257,22 +249,22 @@ static void OnTxDone(void)
 
 static void OnRxDone(uint8_t* payload, uint16_t size, int16_t rssi, int8_t snr)
 {
-    payload[size] = 0;
+    // payload[size] = 0;
 
 #ifdef TX
-    if(strcmp((char*)payload, RX1_ID salve_ack) == 0) {
+    if(memcmp((char*)payload, RX1_ID salve_ack, sizeof(RX1_ID salve_ack)) == 0) {
         
     } 
-    else if(strcmp((char*)payload, RX2_ID salve_ack) == 0) {
+    else if(memcmp((char*)payload, RX2_ID salve_ack, sizeof(RX2_ID salve_ack)) == 0) {
 
     } 
     else {
         return;
     }
 #else
-    if (strcmp((char*)payload, TX_ID open) == 0) {
+    if (memcmp((char*)payload, TX_ID open, sizeof(TX_ID open)) == 0) {
         get_state = true;
-    } else if (strcmp((char*)payload, TX_ID close) == 0) {
+    } else if (memcmp((char*)payload, TX_ID close, sizeof(TX_ID close)) == 0) {
         get_state = false;
     } else {
         return;
@@ -288,8 +280,8 @@ static void OnRxDone(uint8_t* payload, uint16_t size, int16_t rssi, int8_t snr)
 //    LED_OpenUntil(LED_LORA_MISS, 500);
     // resend = 0;
     // UTIL_TIMER_StartWithPeriod(&hear_beat_timer, HEART_BEAT_TIME);
-    UTIL_TIMER_StartWithPeriod(&lora_lost_timer, LOST_LORA_TIME);
-    lora_lost_state = false;
+    // UTIL_TIMER_StartWithPeriod(&lora_lost_timer, LOST_LORA_TIME);
+    lora_lost_state = 10;
 }
 
 static void OnTxTimeout(void)

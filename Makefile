@@ -53,12 +53,12 @@ code/cmsis/Device/ST/STM32WLxx/Source/gcc/startup_stm32wl55xx_cm4.s
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = code\cmsis\Device\ST\STM32WLxx\Source\gcc\linker\STM32WL55XX_FLASH_CM4.ld
+LDSCRIPT = code/cmsis/Device/ST/STM32WLxx/Source/gcc/linker/STM32WL55XX_FLASH_CM4.ld
 #######################################
 # binaries
 #######################################
 PREFIX = arm-none-eabi-
-GCC_PATH = E:/wangjianping/software/arm-none-eabi/bin
+GCC_PATH = /home/sdegl/Software/gcc-arm-none-eabi/bin
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
 # either it can be added to the PATH environment variable.
 ifdef GCC_PATH
